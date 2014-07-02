@@ -70,6 +70,49 @@ func incr(s []cell, c int) []cell {
 	return append(s, cell{c, 1})
 }
 
+// Untrain undoes a previous classification
+func (c *Classifier) Untrain(doc []string, class int) {
+	if class < 0 {
+		panic("naive: class < 0")
+	}
+
+	// Warn about classes we haven't seen before.
+	if class >= len(c.totals) {
+		panic("naive: unknown class")
+	}
+
+	n := float64(len(doc))
+	c.totals[class] -= n
+	c.total -= n
+
+	for _, word := range doc {
+		cells := decr(c.data[word], class)
+		if len(cells) == 0 {
+			delete(c.data, word)
+		} else {
+			c.data[word] = cells
+		}
+	}
+}
+
+// decr does the exact opposite of incr.
+func decr(s []cell, c int) []cell {
+	// TODO: Perform a binary search here instead?
+	for i := range s {
+		if cur := &s[i]; cur.class == c {
+			if cur.count > 1 {
+				cur.count--
+			} else {
+				return append(s[:i], s[i+1:]...)
+			}
+		} else if cur.class > c {
+			break
+		}
+	}
+
+	return s
+}
+
 // Classify classifies a document.
 func (c *Classifier) Classify(doc []string) (class int, tied bool, scores []float64) {
 	scores = make([]float64, len(c.totals))
