@@ -139,7 +139,7 @@ func (c *Classifier) Classify(doc []string) (class int, tied bool, scores []floa
 		}
 	}
 
-	var max float64
+	var max = math.Inf(-1)
 
 	// Add each class' prior probability to its score.
 	for i, score := range scores {
