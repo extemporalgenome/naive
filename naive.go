@@ -115,6 +115,10 @@ func decr(s []cell, c int) []cell {
 
 // Classify classifies a document.
 func (c *Classifier) Classify(doc []string) (class int, tied bool, scores []float64) {
+	if len(c.totals) == 0 {
+		panic("naive: can't classify without training data")
+	}
+
 	scores = make([]float64, len(c.totals))
 
 	// For every word in the document, calculate each class' probability.
