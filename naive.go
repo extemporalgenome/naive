@@ -145,14 +145,14 @@ func (c *Classifier) Classify(doc []string) (class int, tied bool, scores []floa
 		}
 	}
 
-	var max = math.Inf(-1)
+	// Add each class' prior probability to its score. While we're iterating
+	// over the scores slice anyway, find the best candidate.
+	scores[0] += math.Log(c.totals[0] / c.total)
+	max := scores[0]
 
-	// Add each class' prior probability to its score.
-	for i, score := range scores {
-		score += math.Log(c.totals[i] / c.total)
+	for i := 1; i < len(scores); i++ {
+		score := scores[i] + math.Log(c.totals[i]/c.total)
 
-		// While we're iterating over the scores slice anyway, look for the
-		// best candidate.
 		if score > max {
 			class = i
 			max = score
