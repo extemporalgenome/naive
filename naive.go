@@ -76,14 +76,15 @@ func (c *Classifier) Untrain(doc []string, class int) {
 		panic("naive: class < 0")
 	}
 
+	n := float64(len(doc))
+
 	// While it's infeasible to verify that every call to Untrain was preceded
 	// by a matching call to Train, we should ignore requests which would put
 	// the classifier in a weird state.
-	if class >= len(c.totals) || c.totals[class] < len(doc) {
+	if class >= len(c.totals) || c.totals[class] < n {
 		return
 	}
 
-	n := float64(len(doc))
 	c.totals[class] -= n
 	c.total -= n
 
@@ -117,11 +118,12 @@ func decr(s []cell, c int) []cell {
 
 // Classify classifies a document.
 func (c *Classifier) Classify(doc []string) (class int, tied bool, scores []float64) {
-	if len(c.totals) == 0 {
+	classes := len(c.totals)
+	if classes == 0 {
 		panic("naive: can't classify without training data")
 	}
 
-	scores = make([]float64, len(c.totals))
+	scores = make([]float64, classes)
 
 	// For every word in the document, calculate each class' probability.
 	for _, word := range doc {
@@ -139,7 +141,7 @@ func (c *Classifier) Classify(doc []string) (class int, tied bool, scores []floa
 		}
 
 		// Again, use the default score for missing classes.
-		for i < len(scores) {
+		for i < classes {
 			scores[i] += defaultProb
 			i++
 		}
@@ -150,7 +152,7 @@ func (c *Classifier) Classify(doc []string) (class int, tied bool, scores []floa
 	scores[0] += math.Log(c.totals[0] / c.total)
 	max := scores[0]
 
-	for i := 1; i < len(scores); i++ {
+	for i := 1; i < classes; i++ {
 		score := scores[i] + math.Log(c.totals[i]/c.total)
 
 		if score > max {
