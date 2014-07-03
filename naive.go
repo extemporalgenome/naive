@@ -76,9 +76,11 @@ func (c *Classifier) Untrain(doc []string, class int) {
 		panic("naive: class < 0")
 	}
 
-	// Warn about classes we haven't seen before.
-	if class >= len(c.totals) {
-		panic("naive: unknown class")
+	// While it's infeasible to verify that every call to Untrain was preceded
+	// by a matching call to Train, we should ignore requests which would put
+	// the classifier in a weird state.
+	if class >= len(c.totals) || c.totals[class] < len(doc) {
+		return
 	}
 
 	n := float64(len(doc))
